@@ -27,7 +27,8 @@
   const topicTitle = id => (TOPICS.find(t => t.id === id) || {}).title || '';
   const KIND_ICON = { prompt: '✦', template: '[ ]', command: '>_', skill: 'zip', cheat: '≡' };
   // в списках «Читать 5 минут» у всех одинаковое, оставляем только сколько делать
-  const shortTime = l => (l.time || '').replace(/^(читать|урок на) \d+ минут[аы]?( · )?/i, '') || l.time || '';
+  const fixTime = t => String(t || '').replace(/минут за (\d+)/gi, 'за $1').replace(/за (\d+)(?![\d\s]*мин)/gi, (m, n) => `за ${n} ${word(+n, 'минуту', 'минуты', 'минут')}`);
+  const shortTime = l => fixTime((l.time || '').replace(/^(читать|урок на) \d+ минут[аы]?( · )?/i, '') || l.time || '');
   // можно ли пройти урок с телефона: по списку «Что понадобится»
   const device = l => { const n = (l.need || []).join(' '); return /компьютер/i.test(n) && !/телефон/i.test(n.replace(/на телефоне/i, '')) ? 'нужен компьютер' : 'можно с телефона'; };
 
@@ -79,6 +80,7 @@
   let readp = store.get('read', {});
   let copies = store.get('copies', 0);
   let seenPost = store.get('seen', 0); // самый свежий пост канала, который человек уже видел в аппе
+  const seen0 = seenPost; // каким он был при входе: «новый» показываем у уроков, вышедших после прошлого захода
   let profile = store.get('profile', {}); // «Мой блог»: 4 ответа, из них заполняются скобки во всех шаблонах
   let spins = store.get('spins', 0), clean = store.get('clean', 0), stkSeen = store.get('stk', null);
   // какие скобки шаблонов закрывает каждый ответ про блог
@@ -188,13 +190,13 @@
   const secH = (title, more, href, sub) => `<div class="sec-h"><div><h2>${title}</h2>${sub ? `<p class="sub">${esc(sub)}</p>` : ''}</div>${more ? `<a href="${href}">${more} →</a>` : ''}</div>`;
   const isSaved = id => saved.includes(id);
   const starBtn = id => `<button class="star${isSaved(id) ? ' on' : ''}" data-act="save" data-id="${esc(id)}" aria-label="${isSaved(id) ? 'Убрать из моего' : 'Сохранить в моё'}">${isSaved(id) ? I.starOn : I.star}</button>`;
-  const stateTag = l => { const p = pct(l); return done.has(l.id) ? '<em class="st ok">✓</em>' : p ? `<em class="st">${p}%</em>` : !opened[l.id] ? '<em class="st new">новый</em>' : '<em class="st">открыт</em>'; };
+  const stateTag = l => { const p = pct(l); return done.has(l.id) ? '<em class="st ok">✓</em>' : p ? `<em class="st">${p}%</em>` : seen0 && postN(l) > seen0 && !opened[l.id] ? '<em class="st new">новый</em>' : ''; };
   // строка урока в списках: номер, название, что получите, сколько делать
   function lrow(l, label) {
     const p = pct(l);
     return `<a class="lrow" href="#/lesson/${l.id}"><span class="lr-o"><img src="${objSrc(l)}" alt="" width="84" height="84" decoding="async"></span>
       <span class="lr-t"><small class="lr-l">урок ${l.n}${label ? ' · ' + esc(label) : ''}</small><b>${esc(l.title)}</b><span>${esc(l.sub || l.headline || '')}</span>
-        <small>${esc(shortTime(l))} · ${device(l)}${l.has_video ? ' · видео' : ''}${l.skills.length ? ' · скилл' : ''}</small>${p && !done.has(l.id) ? `<i class="bar"><i style="width:${p}%"></i></i>` : ''}</span>${stateTag(l)}</a>`;
+        <small>${esc(shortTime(l))} · ${device(l)}</small>${p && !done.has(l.id) ? `<i class="bar"><i style="width:${p}%"></i></i>` : ''}</span>${stateTag(l)}</a>`;
   }
   // строка в «Полезном»: коротко, по нажатию страница с примером
   function itemRow(t) {
@@ -217,7 +219,10 @@
   }
 
   // три инструмента: на главной и в «Полезном»
-  const tools3 = () => `<div class="tools3">
+  const tools3 = list => list ? `<p class="label blk">Инструменты</p><div class="glass tlist">
+    <a href="#/spin">${ico('spin')}<span><b>Что снять сегодня</b><small>барабан идей под ваш блог</small></span>${I.arr}</a>
+    <a href="#/check">${ico('check')}<span><b>Проверка на нейрослоп</b><small>вставьте текст, подсвечу штампы</small></span>${I.arr}</a>
+    <a href="#/profile">${ico('blog')}<span><b>Мой блог</b><small>${profileDone() ? esc(profile.niche) + ' · изменить' : '4 ответа, и шаблоны заполнятся сами'}</small></span>${I.arr}</a></div>` : `<div class="tools3">
     <a class="glass t3" href="#/spin">${ico('spin')}<b>Что снять сегодня</b><span>барабан идей под ваш блог</span></a>
     <a class="glass t3" href="#/check">${ico('check')}<b>Проверка на нейрослоп</b><span>вставьте текст, подсвечу штампы</span></a>
     <a class="glass t3${profileDone() ? ' ok' : ''}" href="#/profile">${ico('blog')}<b>Мой блог</b><span>${profileDone() ? esc(profile.niche) + ' · изменить' : '4 ответа, и шаблоны заполнятся сами'}</span></a></div>`;
@@ -313,7 +318,7 @@
       <section class="glass about"><img class="about-o" src="${objSrc(l)}" alt="" width="84" height="84">
         ${l.headline ? `<h1>${esc(l.headline)}</h1>` : ''}
         ${l.hook ? `<p>${esc(l.hook)}</p>` : l.lead ? `<p>${esc(l.lead)}</p>` : ''}
-        <div class="chips">${l.time ? `<span class="chip time">${esc(l.time)}</span>` : ''}<span class="chip dev">${device(l)}</span>${l.need.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>
+        <div class="chips">${l.time ? `<span class="chip time">${esc(fixTime(l.time))}</span>` : ''}<span class="chip dev">${device(l)}</span>${l.need.map(n => `<span class="chip">${esc(n)}</span>`).join('')}</div>
         ${l.steps.length ? `<a class="btn main wide" href="#/steps/${l.id}/0">${readp[l.id] && !d ? 'Продолжить по шагам' : 'Пройти по шагам'} · ${plural(l.steps.length, 'шаг', 'шага', 'шагов')}</a>` : ''}
         <div class="btns3">${l.pages.length ? `<button class="btn white" data-act="pdf" data-id="${l.id}">${readp[l.id] && !d ? 'Листать дальше' : 'PDF'}</button>` : ''}
           <button class="btn white" data-url="${esc(l.links.post)}">${l.has_video ? I.play + ' Видео' : 'Пост'}${qtag(l.links.post)}</button>
@@ -341,7 +346,8 @@
     const q = (kk, tt) => '#/tools' + (kk || tt ? '?' + [kk ? 'k=' + kk : '', tt ? 'topic=' + tt : ''].filter(Boolean).join('&') : '');
     return `${lock(D.tools.length, ['полезное', 'из уроков'], '')}
       <p class="lead">Промпты, шаблоны и скиллы из всех уроков. На карточке зачем это, куда вставить и пример. Скобки можно заполнить прямо здесь.</p>
-      ${tools3()}
+      ${tools3(true)}
+      <p class="label blk">Разделы</p>
       <div class="kinds">${kinds.map(x => `<a class="kind${k === x ? ' on' : ''}" href="${k === x ? q('', topic) : q(x, topic)}"><i>${esc(KIND_ICON[x])}</i><b>${esc(KINDS[x].title)}</b><em>${counts[x]}</em></a>`).join('')}
         <a class="kind" href="#/words"><i>Аа</i><b>Словарь</b><em>${(D.glossary || []).length}</em></a></div>
       <a class="glass faqbar" href="#/faq"><b>?</b><span><strong>${(D.faq || []).filter(x => !x.soon).length} ответов на частые вопросы</strong>какую подписку брать, почему кончается лимит, с чего начать</span>${I.arr}</a>
@@ -540,7 +546,7 @@
     el.innerHTML = `<div class="sheet-bg" data-act="close"></div><div class="sheet" role="dialog" aria-label="Урок ${l.n}"><div class="grip"></div>
       <div class="ss-h"><span class="lr-n tint-${esc(l.tint)}" style="background-image:url('${esc(l.bg)}')"><b>${l.n}</b></span><div><span class="label">урок ${l.n}${d ? ' · пройден' : p ? ' · пролистали ' + p + '%' : ''}</span><h3>${esc(l.title)}</h3></div></div>
       <p class="ss-sub">${esc(l.sub || l.headline || '')}</p>
-      <div class="chips">${l.time ? `<span class="chip time">${esc(l.time)}</span>` : ''}<span class="chip dev">${device(l)}</span>${l.skills.length ? '<span class="chip">со скиллом</span>' : ''}</div>
+      <div class="chips">${l.time ? `<span class="chip time">${esc(fixTime(l.time))}</span>` : ''}<span class="chip dev">${device(l)}</span>${l.skills.length ? '<span class="chip">со скиллом</span>' : ''}</div>
       <div class="row2"><a class="btn main" href="#/lesson/${l.id}">Открыть урок</a>${l.pages.length ? `<button class="btn ghost" data-act="pdf" data-id="${l.id}">${readp[l.id] && !d ? 'Листать дальше' : 'Листать PDF'}</button>` : ''}</div>
       <button class="btn ghost wide" data-act="done" data-id="${l.id}">${d ? 'Снять отметку «пройден»' : 'Я прошёл урок'}</button></div>`;
     document.body.appendChild(el);

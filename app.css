@@ -6,7 +6,7 @@
    явные стрелки у листалок, много воздуха. Шрифты: Unbounded (заголовки и цифры, вес 300 против 900), Manrope (текст),
    Geist Mono (подписи). Граффити и лента остаются только на обложках уроков, как в PDF. */
 :root {
-  --bg: #eceef3; --ink: #0a0d22; --dim: rgba(10,13,34,.75); --mute: rgba(10,13,34,.52); --line: rgba(10,13,34,.1);
+  --bg: #eceef3; --ink: #0a0d22; --dim: rgba(10,13,34,.8); --mute: rgba(10,13,34,.64); --line: rgba(10,13,34,.1);
   --neon: #2f5fe8; --neon-hi: #5b85ff; --glow: rgba(47,95,232,.34); --blue: #2f5fe8; --soft: #3550c8; --fill: #2f5fe8; --num: #2f5fe8;
   --num1: #7393ff; --num2: #2448d8; --nglow: 0 8px 16px rgba(47,95,232,.2);
   --g1: rgba(255,255,255,.82); --g2: rgba(255,255,255,.5); --chip: rgba(255,255,255,.7);
@@ -121,13 +121,11 @@ img { display: block; max-width: 100%; }
 .note { font-size: 13.5px; line-height: 1.45; color: var(--mute); margin-top: 10px; }
 .hand { font: 600 15px/1.35 var(--text); }
 .greet { display: none; }
-/* разделы пронумерованы: 01, 02… тонкий капс, под ним линия с неоновым отрезком */
-.view { counter-reset: sec; }
+/* заголовок раздела: тонкий капс, под ним линия с неоновым отрезком */
 .sec { margin-top: 34px; }
-.sec-h { position: relative; counter-increment: sec; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.sec-h { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .sec-h::after { content: ''; position: absolute; left: 0; bottom: -1px; width: 56px; height: 2px; border-radius: 2px; background: var(--neon); box-shadow: 0 0 10px var(--glow); }
 .sec-h > div { min-width: 0; }
-.sec-h > div::before { content: counter(sec, decimal-leading-zero); display: inline-block; margin-bottom: 10px; padding: 2px 7px; border-radius: 7px; font: 600 10px/1.4 var(--mono); letter-spacing: .06em; color: var(--soft); box-shadow: inset 0 0 0 1px var(--line); }
 .sec-h h2 { font: 400 21px/1.08 var(--disp); text-transform: uppercase; letter-spacing: -.02em; text-wrap: balance; }
 .sec-h .sub { font-size: 13px; color: var(--mute); margin-top: 6px; }
 .sec-h > a { flex: none; font: 600 10.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--soft); padding-bottom: 2px; }
@@ -685,6 +683,35 @@ body.onb-on { overflow: hidden; }
 .onb-dots { display: flex; gap: 6px; }
 .onb-dots i { width: 7px; height: 7px; border-radius: 4px; background: var(--line); transition: width .3s ease, background .3s ease; }
 .onb-dots i.on { width: 22px; background: var(--neon); box-shadow: 0 0 8px var(--glow); }
+
+/* ===== подписи: читаемо на телефоне ===== */
+.label, .lock .nl { font: 700 11.5px/1.2 var(--text); letter-spacing: .08em; }
+.label.blk { display: block; margin: 22px 0 10px; color: var(--mute); }
+.lr-t .lr-l, .lr-t > small, .ir-main small, .hit small, .stop .sl small, .of, .fixes small { font: 600 12px/1.3 var(--text); letter-spacing: 0; text-transform: none; }
+.lr-t .lr-l { color: var(--soft); margin-bottom: 2px; }
+.lr-t .lr-l::first-letter, .lr-t > small::first-letter, .ir-main small::first-letter, .hit small::first-letter { text-transform: uppercase; }
+.lr-t > small, .ir-main small, .hit small, .stop .sl small { color: var(--mute); }
+.lr-t > small { margin-top: 4px; white-space: normal; }
+.sec-h > a, .hq-h a { font: 700 13px var(--text); letter-spacing: 0; text-transform: none; }
+.st { font: 700 11.5px var(--text); }
+.st.new { font-size: 11px; letter-spacing: .02em; text-transform: none; }
+.sk-zip { font: 700 11.5px var(--text); letter-spacing: 0; text-transform: none; }
+.kind em, .mroute em, .stage-h em { font-family: var(--text); font-weight: 700; font-size: 12px; }
+.ch em { font: 600 11.5px var(--text); letter-spacing: 0; text-transform: none; }
+.stv-h { font: 700 12px var(--text); letter-spacing: 0; text-transform: none; }
+.pages em { font: 700 11px var(--text); }
+.stv-page em { font: 700 11.5px var(--text); letter-spacing: 0; text-transform: none; }
+.sticker { font-size: 10.5px; }
+/* «Полезное»: инструменты одним списком, чтобы не путались с плитками разделов */
+.tlist { padding: 4px 12px; --r: 22px; }
+.tlist a { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.tlist a + a { border-top: 1px solid var(--line); }
+.tlist .ico { width: 42px; height: 42px; }
+.tlist span { flex: 1; min-width: 0; }
+.tlist b { display: block; font: 700 15px/1.25 var(--text); }
+.tlist small { display: block; font-size: 12.5px; line-height: 1.3; color: var(--mute); margin-top: 2px; }
+.tlist svg { flex: none; color: var(--mute); }
+.label.blk + .kinds { margin-top: 0; }
 
 @media (max-width: 360px) { .fit { font-size: 38px; } .btns3 .btn { font-size: 13px; } .links { grid-template-columns: 1fr; } .link { flex-direction: row; align-items: center; } .t3 b { font-size: 11.5px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
